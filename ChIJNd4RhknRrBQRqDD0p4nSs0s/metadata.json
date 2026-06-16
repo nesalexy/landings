@@ -1,0 +1,20 @@
+{
+  "place_id": "ChIJNd4RhknRrBQRqDD0p4nSs0s",
+  "name": "Burger Chef Plaza Mall",
+  "address": "4000, KazarmiIztochen, \u0443\u043b. \u201e\u0414-\u0440 \u0413\u0435\u043e\u0440\u0433\u0438 \u0421\u0442\u0440\u0430\u043d\u0441\u043a\u0438\u201c 3, 4019 Plovdiv, Bu\u0142garia",
+  "rating": 4.7,
+  "review_count": 5548,
+  "categories": [
+    "establishment",
+    "food",
+    "point_of_interest",
+    "restaurant"
+  ],
+  "price_level": 2,
+  "coordinates": {
+    "lat": 42.1451077,
+    "lng": 24.7822014
+  },
+  "maps_url": "https://maps.google.com/?cid=5454935062345953448",
+  "timestamp": "2026-06-16T22:21:36.695540"
+}
