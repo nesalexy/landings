@@ -1,0 +1,20 @@
+{
+  "place_id": "ChIJ9ae2s9C1G0cRG6OgeRAsTxk",
+  "name": "SMAK INDII Restauracja Grill&Kebab",
+  "address": "Lipiec Reymontowskich 5, 91-120 \u0141\u00f3d\u017a, Polska",
+  "rating": 4.8,
+  "review_count": 160,
+  "categories": [
+    "establishment",
+    "food",
+    "point_of_interest",
+    "restaurant"
+  ],
+  "price_level": null,
+  "coordinates": {
+    "lat": 51.7945419,
+    "lng": 19.4027653
+  },
+  "maps_url": "https://maps.google.com/?cid=1823724823380009755",
+  "timestamp": "2026-06-16T22:32:16.722285"
+}
