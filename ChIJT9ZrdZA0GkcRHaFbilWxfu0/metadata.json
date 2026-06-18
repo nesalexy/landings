@@ -1,0 +1,21 @@
+{
+  "place_id": "ChIJT9ZrdZA0GkcRHaFbilWxfu0",
+  "name": "Primus Sklep Spo\u017cywczy",
+  "address": "Mazurska 21, 93-149 \u0141\u00f3d\u017a, Polska",
+  "rating": 3.8,
+  "review_count": 64,
+  "categories": [
+    "establishment",
+    "food",
+    "grocery_or_supermarket",
+    "point_of_interest",
+    "store"
+  ],
+  "price_level": null,
+  "coordinates": {
+    "lat": 51.72923489999999,
+    "lng": 19.4806726
+  },
+  "maps_url": "https://maps.google.com/?cid=17113310615006060829",
+  "timestamp": "2026-06-18T21:15:51.251230"
+}
