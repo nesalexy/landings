@@ -13,320 +13,402 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <style>
-        .hero { background: linear-gradient(135deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0) 100%); }
-        .star { color: #f59e0b; }
-        .review-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .review-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .gallery-img { transition: transform 0.3s ease; cursor: pointer; }
-        .gallery-img:hover { transform: scale(1.03); }
-        .cta-button { transition: all 0.3s ease; }
-        .cta-button:hover { transform: scale(1.03); box-shadow: 0 20px 25px rgba(59, 130, 246, 0.3); }
-        .stat-card { background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); }
-        #map-container { height: 22rem; min-height: 280px; }
-        @media (min-width: 768px) { #map-container { height: 24rem; } }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .lightbox {
-            position: fixed; inset: 0; z-index: 100;
-            background: rgba(0,0,0,0.92);
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+        :root {
+            --fg: #0f0f0f;
+            --fg-2: #555;
+            --fg-3: #999;
+            --bg: #fff;
+            --bg-2: #f5f5f5;
+            --bg-3: #ebebeb;
+            --border: rgba(0,0,0,0.1);
+            --border-md: rgba(0,0,0,0.18);
+            --accent: #0f0f0f;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
         }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --fg: #f0f0f0;
+                --fg-2: #aaa;
+                --fg-3: #666;
+                --bg: #111;
+                --bg-2: #1c1c1c;
+                --bg-3: #272727;
+                --border: rgba(255,255,255,0.08);
+                --border-md: rgba(255,255,255,0.15);
+                --accent: #f0f0f0;
+            }
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--fg); background: var(--bg); font-size: 15px; line-height: 1.6; }
+
+        /* NAV */
+        .nav { position: sticky; top: 0; background: var(--bg); border-bottom: 0.5px solid var(--border); z-index: 50; }
+        .nav-inner { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; height: 54px; }
+        .nav-logo { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-links a { font-size: 13px; color: var(--fg-2); text-decoration: none; }
+        .nav-links a:hover { color: var(--fg); }
+        @media (max-width: 600px) { .nav-links { display: none; } }
+
+        /* HERO */
+        .hero { padding: 3rem 1.5rem 2.5rem; border-bottom: 0.5px solid var(--border); }
+        .hero-inner { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr 340px; gap: 3rem; align-items: start; }
+        @media (max-width: 768px) { .hero-inner { grid-template-columns: 1fr; gap: 2rem; } }
+
+        .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; color: var(--fg-2); background: var(--bg-2); border: 0.5px solid var(--border); border-radius: 100px; padding: 4px 12px; margin-bottom: 1rem; }
+
+        h1 { font-size: 30px; font-weight: 600; line-height: 1.2; margin-bottom: 1rem; }
+        @media (max-width: 480px) { h1 { font-size: 24px; } }
+
+        .rating-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 1.5rem; }
+        .stars { color: #f59e0b; font-size: 14px; letter-spacing: 1px; }
+        .rating-num { font-size: 20px; font-weight: 600; }
+        .rating-count { font-size: 13px; color: var(--fg-2); }
+        .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 100px; }
+        .badge-open { background: #dcfce7; color: #15803d; }
+        .badge-closed { background: #fee2e2; color: #b91c1c; }
+
+        .info-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.75rem; }
+        .info-row { display: flex; gap: 10px; align-items: flex-start; }
+        .info-icon { width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--bg-2); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+        .info-icon svg { width: 15px; height: 15px; stroke: var(--fg-2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .info-label { font-size: 11px; color: var(--fg-3); margin-bottom: 1px; text-transform: uppercase; letter-spacing: .04em; }
+        .info-value { font-size: 14px; color: var(--fg); }
+        .info-value a { color: #2563eb; text-decoration: none; }
+        .info-value a:hover { text-decoration: underline; }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+        .btn { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: var(--radius-sm); cursor: pointer; text-decoration: none; border: none; transition: opacity .15s; }
+        .btn:hover { opacity: .82; }
+        .btn-dark { background: var(--fg); color: var(--bg); }
+        .btn-outline { background: transparent; color: var(--fg); border: 0.5px solid var(--border-md); }
+        .btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* HERO IMAGE */
+        .hero-image { border-radius: var(--radius-lg); overflow: hidden; aspect-ratio: 4/3; background: var(--bg-2); position: relative; }
+        .hero-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .photo-count { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.55); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 100px; }
+
+        /* SECTIONS */
+        .section { padding: 2.5rem 1.5rem; border-bottom: 0.5px solid var(--border); }
+        .section-inner { max-width: 960px; margin: 0 auto; }
+        .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; }
+        .section-title { font-size: 18px; font-weight: 600; }
+        .section-meta { font-size: 13px; color: var(--fg-2); }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+        @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+        .stat { background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 1rem 1.25rem; }
+        .stat-label { font-size: 11px; color: var(--fg-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+        .stat-value { font-size: 26px; font-weight: 600; line-height: 1; }
+        .stat-value span { font-size: 14px; font-weight: 400; color: var(--fg-3); }
+        .stat-sub { font-size: 11px; color: var(--fg-3); margin-top: 4px; }
+
+        /* TWO COL */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+        .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; }
+        .card-title { font-size: 11px; font-weight: 600; color: var(--fg-3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1rem; }
+
+        /* HOURS */
+        .hours-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+        .hours-row:last-child { border: none; padding-bottom: 0; }
+        .hours-day { color: var(--fg-2); }
+        .hours-time { font-feature-settings: "tnum"; color: var(--fg); }
+
+        /* DETAILS */
+        .detail-row { padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+        .detail-row:last-child { border: none; padding-bottom: 0; }
+        .detail-key { font-size: 11px; color: var(--fg-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+        .detail-val { font-size: 13px; color: var(--fg); }
+        .status-open { color: #15803d; }
+
+        /* REVIEWS */
+        .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        @media (max-width: 720px) { .reviews-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 480px) { .reviews-grid { grid-template-columns: 1fr; } }
+        .review { background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; }
+        .review-stars { color: #f59e0b; font-size: 12px; letter-spacing: 1px; margin-bottom: 10px; }
+        .review-rating { font-size: 13px; font-weight: 600; color: var(--fg); margin-left: 4px; }
+        .review-text { font-size: 13px; line-height: 1.6; color: var(--fg-2); margin-bottom: 12px; }
+        .review-author { font-size: 13px; font-weight: 500; }
+        .review-date { font-size: 11px; color: var(--fg-3); margin-top: 2px; }
+
+        /* GALLERY */
+        .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 140px; gap: 8px; }
+        @media (max-width: 640px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 120px; } }
+        .gallery-item { border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; position: relative; background: var(--bg-2); }
+        .gallery-item.featured { grid-column: span 2; grid-row: span 2; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .2s; }
+        .gallery-item:hover img { opacity: .88; }
+        .gallery-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: #fff; }
+
+        /* MAP */
+        .map-grid { display: grid; grid-template-columns: 1fr 260px; gap: 16px; align-items: start; }
+        @media (max-width: 680px) { .map-grid { grid-template-columns: 1fr; } }
+        #map-container { height: 300px; border-radius: var(--radius-md); overflow: hidden; border: 0.5px solid var(--border); }
+        .map-sidebar { display: flex; flex-direction: column; gap: 10px; }
+        .map-addr { font-size: 13px; color: var(--fg-2); line-height: 1.5; padding: 1rem; background: var(--bg-2); border: 0.5px solid var(--border); border-radius: var(--radius-md); }
+        .map-addr-label { font-size: 11px; color: var(--fg-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+
+        /* CTA */
+        .cta { padding: 2.5rem 1.5rem; background: var(--bg-2); border-top: 0.5px solid var(--border); }
+        .cta-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
+        @media (max-width: 560px) { .cta-inner { flex-direction: column; align-items: flex-start; } }
+        .cta h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+        .cta p { font-size: 14px; color: var(--fg-2); }
+
+        /* FOOTER */
+        .footer { padding: 1.25rem 1.5rem; border-top: 0.5px solid var(--border); }
+        .footer-inner { max-width: 960px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .footer-copy { font-size: 12px; color: var(--fg-3); }
+        .footer-link { font-size: 12px; color: #2563eb; text-decoration: none; }
+        .footer-link:hover { text-decoration: underline; }
+
+        /* LIGHTBOX */
+        .lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s; }
         .lightbox.active { opacity: 1; pointer-events: auto; }
-        .lightbox img {
-            max-width: min(92vw, 1100px); max-height: 82vh;
-            object-fit: contain; user-select: none; touch-action: pan-y;
-        }
-        .lightbox-btn {
-            position: absolute; background: rgba(255,255,255,0.15);
-            color: white; border: none; border-radius: 9999px;
-            width: 3rem; height: 3rem; font-size: 1.75rem;
-            display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(4px); transition: background 0.2s;
-        }
-        .lightbox-btn:hover { background: rgba(255,255,255,0.28); }
-        .lightbox-close { top: 1rem; right: 1rem; font-size: 2rem; }
-        .lightbox-prev { left: 0.75rem; top: 50%; transform: translateY(-50%); }
-        .lightbox-next { right: 0.75rem; top: 50%; transform: translateY(-50%); }
-        .lightbox-counter {
-            position: absolute; bottom: 1.25rem; left: 50%;
-            transform: translateX(-50%); color: #e5e7eb; font-size: 0.95rem;
-        }
-        @media (max-width: 640px) {
-            .lightbox-prev { left: 0.25rem; width: 2.5rem; height: 2.5rem; }
-            .lightbox-next { right: 0.25rem; width: 2.5rem; height: 2.5rem; }
-        }
+        .lightbox img { max-width: min(92vw, 1100px); max-height: 82vh; object-fit: contain; user-select: none; touch-action: pan-y; }
+        .lb-btn { position: absolute; background: rgba(255,255,255,0.12); color: #fff; border: none; border-radius: 100px; width: 44px; height: 44px; font-size: 22px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); cursor: pointer; transition: background .2s; }
+        .lb-btn:hover { background: rgba(255,255,255,0.22); }
+        .lb-close { top: 1rem; right: 1rem; font-size: 26px; }
+        .lb-prev { left: 1rem; top: 50%; transform: translateY(-50%); }
+        .lb-next { right: 1rem; top: 50%; transform: translateY(-50%); }
+        .lb-counter { position: absolute; bottom: 1.25rem; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,.7); font-size: 13px; }
     </style>
 </head>
-<body class="bg-white text-gray-900 scroll-smooth">
+<body>
 
-<nav class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur shadow-sm z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <h1 class="text-lg sm:text-xl font-bold text-blue-600 truncate pr-4">Myjnia</h1>
-            <div class="hidden md:flex gap-6 text-sm font-medium">
-                <a href="#info" class="text-gray-600 hover:text-blue-600">Informacje</a>
-                <a href="#reviews" class="text-gray-600 hover:text-blue-600">Opinie</a>
-                <a href="#gallery" class="text-gray-600 hover:text-blue-600">Zdjęcia</a>
-                <a href="#map" class="text-gray-600 hover:text-blue-600">Lokalizacja</a>
-            </div>
+<!-- NAV -->
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-logo">Myjnia</div>
+        <div class="nav-links">
+            <a href="#info">Informacje</a>
+            <a href="#reviews">Opinie</a>
+            <a href="#gallery">Zdjęcia</a>
+            <a href="#map">Lokalizacja</a>
         </div>
     </div>
 </nav>
 
-<section class="hero pt-20 pb-16 md:pb-20 min-h-[85vh] flex items-center bg-gradient-to-b from-slate-50 to-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14 items-center">
-            <div class="space-y-6 order-2 md:order-1">
-                
-                <div class="flex flex-wrap gap-2">
-                    
-                    <span class="text-xs font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 px-3 py-1 rounded-full">Car repair</span>
-                    
-                    <span class="text-xs font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 px-3 py-1 rounded-full">Car wash</span>
-                    
-                    <span class="text-xs font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 px-3 py-1 rounded-full">Sklep</span>
-                    
-                </div>
-                
-
-                <div>
-                    <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">Myjnia</h2>
-                    <p class="text-lg text-gray-600 mt-3">Sprawdź godziny otwarcia, opinie i zdjęcia tego miejsca</p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-3">
-                    <div aria-label="Ocena 4.5 na 5">
-                        
-                            <span class="star">★</span>
-                        
-                            <span class="star">★</span>
-                        
-                            <span class="star">★</span>
-                        
-                            <span class="star">★</span>
-                        
-                            <span class="text-gray-300">★</span>
-                        
-                    </div>
-                    <span class="text-xl font-bold">4.5</span>
-                    <span class="text-gray-500">(360 opinii)</span>
-                    
-                    <span class="text-sm font-medium px-3 py-1 rounded-full bg-red-100 text-red-800">
-                        Zamknięte teraz
-                    </span>
-                    
-                </div>
-
-                <div class="space-y-4 text-gray-700">
-                    <div class="flex gap-3">
-                        <svg class="w-6 h-6 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <div>
-                            <p class="font-semibold text-gray-900">Adres</p>
-                            <p>Mazurska 20, 93-305 Łódź, Polska</p>
-                        </div>
-                    </div>
-
-                    
-                    <div class="flex gap-3">
-                        <svg class="w-6 h-6 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                        <div>
-                            <p class="font-semibold text-gray-900">Telefon</p>
-                            <a href="tel:508 478 493" class="text-blue-600 hover:underline">508 478 493</a>
-                        </div>
-                    </div>
-                    
-
-                    
-                </div>
-
-                <div class="flex flex-wrap gap-3 pt-2">
-                    <a href="#map" class="cta-button inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg">Zobacz na mapie</a>
-                    
-                    <a href="https://maps.google.com/?cid=9279461724964387464" target="_blank" rel="noopener noreferrer" class="inline-block border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-xl">Wyznacz trasę</a>
-                    
-                </div>
-            </div>
-
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-inner">
+        <div>
             
-            <div class="order-1 md:order-2">
-                <button type="button" class="gallery-open w-full relative overflow-hidden rounded-2xl shadow-2xl aspect-[4/3] block" data-index="0" aria-label="Otwórz galerię zdjęć">
-                    <img src="images/photo_00.jpg" alt="Myjnia" class="w-full h-full object-cover" loading="eager">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                    
-                    <span class="absolute bottom-4 right-4 bg-black/60 text-white text-sm px-3 py-1 rounded-full">+7 zdjęć</span>
-                    
-                </button>
+            <div class="chip">
+                <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:var(--fg-2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                Car repair · Car wash · Sklep
             </div>
             
+
+            <h1>Myjnia</h1>
+
+            <div class="rating-row">
+                <span class="stars">
+                    ★★★★☆
+                </span>
+                <span class="rating-num">4.5</span>
+                <span class="rating-count">(360 opinii)</span>
+                
+                <span class="badge badge-closed">
+                    Zamknięte teraz
+                </span>
+                
+            </div>
+
+            <div class="info-list">
+                <div class="info-row">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div>
+                        <div class="info-label">Adres</div>
+                        <div class="info-value">Mazurska 20, 93-305 Łódź, Polska</div>
+                    </div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    </div>
+                    <div>
+                        <div class="info-label">Telefon</div>
+                        <div class="info-value"><a href="tel:508 478 493">508 478 493</a></div>
+                    </div>
+                </div>
+                
+                
+            </div>
+
+            <div class="actions">
+                <a href="#map" class="btn btn-dark">
+                    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                    Zobacz na mapie
+                </a>
+                
+                <a href="https://maps.google.com/?cid=9279461724964387464" target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+                    <svg viewBox="0 0 24 24"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Wyznacz trasę
+                </a>
+                
+            </div>
         </div>
+
+        
+        <div>
+            <button type="button" class="gallery-item featured gallery-open" style="width:100%;border-radius:var(--radius-lg);display:block;cursor:pointer;border:none;padding:0" data-index="0" aria-label="Otwórz galerię">
+                <img src="images/photo_00.jpg" alt="Myjnia" loading="eager">
+                
+                <div class="photo-count">+7 zdjęć</div>
+                
+            </button>
+        </div>
+        
     </div>
 </section>
 
-<section id="info" class="py-16 md:py-20 bg-slate-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10">Informacje o miejscu</h2>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-            <div class="stat-card rounded-2xl shadow-md p-6 border border-slate-100 text-center">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-100 flex items-center justify-center text-2xl">⭐</div>
-                <p class="text-sm text-gray-500 uppercase tracking-wide font-medium">Ocena ogólna</p>
-                <p class="text-4xl font-bold text-gray-900 mt-1">4.5<span class="text-lg text-gray-400">/5</span></p>
+<!-- INFO -->
+<section id="info" class="section">
+    <div class="section-inner">
+        <div class="stats-grid">
+            <div class="stat">
+                <div class="stat-label">Ocena ogólna</div>
+                <div class="stat-value">4.5<span>/5</span></div>
+                <div class="stat-sub">na podstawie opinii</div>
             </div>
-            <div class="stat-card rounded-2xl shadow-md p-6 border border-slate-100 text-center">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 flex items-center justify-center text-2xl">💬</div>
-                <p class="text-sm text-gray-500 uppercase tracking-wide font-medium">Liczba opinii</p>
-                <p class="text-4xl font-bold text-gray-900 mt-1">360</p>
+            <div class="stat">
+                <div class="stat-label">Liczba opinii</div>
+                <div class="stat-value">360</div>
+                <div class="stat-sub">recenzji użytkowników</div>
             </div>
-            <div class="stat-card rounded-2xl shadow-md p-6 border border-slate-100 text-center">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-violet-100 flex items-center justify-center text-2xl">📷</div>
-                <p class="text-sm text-gray-500 uppercase tracking-wide font-medium">Zdjęcia</p>
-                <p class="text-4xl font-bold text-gray-900 mt-1">8</p>
+            <div class="stat">
+                <div class="stat-label">Zdjęcia</div>
+                <div class="stat-value">8</div>
+                <div class="stat-sub">dostępnych zdjęć</div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="two-col">
             
-            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-slate-100">
-                <h3 class="text-2xl font-bold text-gray-900 mb-5">Godziny otwarcia</h3>
-                <ul class="space-y-2.5">
-                    
-                    <li class="flex justify-between gap-4 text-gray-700 py-1 border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-900 shrink-0">Poniedziałek</span>
-                        <span class="text-right tabular-nums">08:00 – 18:00</span>
-                    </li>
-                    
-                    <li class="flex justify-between gap-4 text-gray-700 py-1 border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-900 shrink-0">Wtorek</span>
-                        <span class="text-right tabular-nums">08:00 – 18:00</span>
-                    </li>
-                    
-                    <li class="flex justify-between gap-4 text-gray-700 py-1 border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-900 shrink-0">Środa</span>
-                        <span class="text-right tabular-nums">08:00 – 18:00</span>
-                    </li>
-                    
-                    <li class="flex justify-between gap-4 text-gray-700 py-1 border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-900 shrink-0">Czwartek</span>
-                        <span class="text-right tabular-nums">08:00 – 18:00</span>
-                    </li>
-                    
-                    <li class="flex justify-between gap-4 text-gray-700 py-1 border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-900 shrink-0">Piątek</span>
-                        <span class="text-right tabular-nums">08:00 – 18:00</span>
-                    </li>
-                    
-                    <li class="flex justify-between gap-4 text-gray-700 py-1 border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-900 shrink-0">Sobota</span>
-                        <span class="text-right tabular-nums">08:00 – 15:00</span>
-                    </li>
-                    
-                    <li class="flex justify-between gap-4 text-gray-700 py-1 border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-900 shrink-0">Niedziela</span>
-                        <span class="text-right tabular-nums">Zamknięte</span>
-                    </li>
-                    
-                </ul>
+            <div class="card">
+                <div class="card-title">Godziny otwarcia</div>
+                
+                <div class="hours-row">
+                    <span class="hours-day">Poniedziałek</span>
+                    <span class="hours-time">08:00 – 18:00</span>
+                </div>
+                
+                <div class="hours-row">
+                    <span class="hours-day">Wtorek</span>
+                    <span class="hours-time">08:00 – 18:00</span>
+                </div>
+                
+                <div class="hours-row">
+                    <span class="hours-day">Środa</span>
+                    <span class="hours-time">08:00 – 18:00</span>
+                </div>
+                
+                <div class="hours-row">
+                    <span class="hours-day">Czwartek</span>
+                    <span class="hours-time">08:00 – 18:00</span>
+                </div>
+                
+                <div class="hours-row">
+                    <span class="hours-day">Piątek</span>
+                    <span class="hours-time">08:00 – 18:00</span>
+                </div>
+                
+                <div class="hours-row">
+                    <span class="hours-day">Sobota</span>
+                    <span class="hours-time">08:00 – 15:00</span>
+                </div>
+                
+                <div class="hours-row">
+                    <span class="hours-day">Niedziela</span>
+                    <span class="hours-time">Zamknięte</span>
+                </div>
+                
             </div>
             
 
-            <div class="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-slate-100">
-                <h3 class="text-2xl font-bold text-gray-900 mb-5">Szczegóły</h3>
-                <dl class="space-y-4">
-                    
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-500">Kategoria</dt>
-                        <dd class="text-gray-900 mt-0.5">Car repair, Car wash, Sklep</dd>
-                    </div>
-                    
-                    
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-500">Status</dt>
-                        <dd class="text-gray-900 mt-0.5">Czynne</dd>
-                    </div>
-                    
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-500">Kod Plus</dt>
-                        <dd class="text-gray-900 mt-0.5">PFHH+WX Łódź, Polska</dd>
-                    </div>
-                    
-                    
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-500">Okolica</dt>
-                        <dd class="text-gray-900 mt-0.5">Mazurska 20, Łódź</dd>
-                    </div>
-                    
-                </dl>
+            <div class="card">
+                <div class="card-title">Szczegóły</div>
+                
+                <div class="detail-row">
+                    <div class="detail-key">Kategoria</div>
+                    <div class="detail-val">Car repair, Car wash, Sklep</div>
+                </div>
+                
+                
+                <div class="detail-row">
+                    <div class="detail-key">Status</div>
+                    <div class="detail-val status-open">Czynne</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-key">Kod Plus</div>
+                    <div class="detail-val" style="font-family:monospace;font-size:12px">PFHH+WX Łódź, Polska</div>
+                </div>
+                
+                
+                <div class="detail-row">
+                    <div class="detail-key">Okolica</div>
+                    <div class="detail-val">Mazurska 20, Łódź</div>
+                </div>
+                
             </div>
         </div>
     </div>
 </section>
 
+<!-- REVIEWS -->
 
-<section id="reviews" class="py-16 md:py-20 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10">Opinie klientów</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<section id="reviews" class="section">
+    <div class="section-inner">
+        <div class="section-header">
+            <h2 class="section-title">Opinie klientów</h2>
+            <span class="section-meta">360 recenzji</span>
+        </div>
+        <div class="reviews-grid">
             
-            <article class="review-card bg-slate-50 rounded-2xl shadow-sm p-6 border-l-4 border-amber-400">
-                <div class="flex items-center gap-2 mb-3">
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                    <span class="font-bold text-gray-800">5.0</span>
+            <article class="review">
+                <div class="review-stars">
+                    ★★★★★
+                    <span class="review-rating">5.0</span>
                 </div>
-                <p class="text-gray-700 mb-4 leading-relaxed">Bardzo profesjonalna obsługa i szybka wymiana opon. Pracownicy znają się na rzeczy, doradzają i wszystko wykonują dokładnie. Ceny rozsądne, a czas oczekiwania krótki. Zdecydowanie polecam tę wulkanizację każdemu, kto szuka fachowej pomocy. Myjnia samochodowa – auto po myciu wygląda jak nowe. Dokładnie umyte felgi, szyby i karoseria. Obsługa miła i sprawna, a ceny bardzo przystępne. Na pewno będę tu wracać.</p>
-                <footer class="border-t border-gray-200 pt-3">
-                    <p class="font-semibold text-gray-900">Łukasz Motylinski</p>
-                    <p class="text-sm text-gray-500">2 miesiące temu</p>
+                <p class="review-text">Bardzo profesjonalna obsługa i szybka wymiana opon. Pracownicy znają się na rzeczy, doradzają i wszystko wykonują dokładnie. Ceny rozsądne, a czas oczekiwania krótki. Zdecydowanie polecam tę wulkanizację każdemu, kto szuka fachowej pomocy. Myjnia samochodowa – auto po myciu wygląda jak nowe. Dokładnie umyte felgi, szyby i karoseria. Obsługa miła i sprawna, a ceny bardzo przystępne. Na pewno będę tu wracać.</p>
+                <footer>
+                    <div class="review-author">Łukasz Motylinski</div>
+                    <div class="review-date">2 miesiące temu</div>
                 </footer>
             </article>
             
-            <article class="review-card bg-slate-50 rounded-2xl shadow-sm p-6 border-l-4 border-amber-400">
-                <div class="flex items-center gap-2 mb-3">
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                    <span class="font-bold text-gray-800">5.0</span>
+            <article class="review">
+                <div class="review-stars">
+                    ★★★★★
+                    <span class="review-rating">5.0</span>
                 </div>
-                <p class="text-gray-700 mb-4 leading-relaxed">Bardzo profesjonalna i rzetelna obsługa. Wulkanizacja wykonana szybko i dokładnie, wszystko zostało sprawdzone i dobrze wyważone. Dodatkowo skorzystałem z myjni samochodowej – auto zostało umyte bardzo starannie, zarówno karoseria, jak i felgi wyglądają jak nowe. Miła obsługa, dobre ceny i krótki czas oczekiwania. Zdecydowanie polecam to miejsce każdemu kierowcy.</p>
-                <footer class="border-t border-gray-200 pt-3">
-                    <p class="font-semibold text-gray-900">Kamil Motylinski</p>
-                    <p class="text-sm text-gray-500">2 miesiące temu</p>
+                <p class="review-text">Bardzo profesjonalna i rzetelna obsługa. Wulkanizacja wykonana szybko i dokładnie, wszystko zostało sprawdzone i dobrze wyważone. Dodatkowo skorzystałem z myjni samochodowej – auto zostało umyte bardzo starannie, zarówno karoseria, jak i felgi wyglądają jak nowe. Miła obsługa, dobre ceny i krótki czas oczekiwania. Zdecydowanie polecam to miejsce każdemu kierowcy.</p>
+                <footer>
+                    <div class="review-author">Kamil Motylinski</div>
+                    <div class="review-date">2 miesiące temu</div>
                 </footer>
             </article>
             
-            <article class="review-card bg-slate-50 rounded-2xl shadow-sm p-6 border-l-4 border-amber-400">
-                <div class="flex items-center gap-2 mb-3">
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                    <span class="font-bold text-gray-800">5.0</span>
+            <article class="review">
+                <div class="review-stars">
+                    ★★★★★
+                    <span class="review-rating">5.0</span>
                 </div>
-                <p class="text-gray-700 mb-4 leading-relaxed">Opinia dotyczy wulkanizacji.
+                <p class="review-text">Opinia dotyczy wulkanizacji.
 
 Profesjonalne podejście do klienta, krótki czas oczekiwania i błyskawiczna wymiana opon (praktycznie od ręki).
 
@@ -339,31 +421,21 @@ Koszt mycia (pranie tapicerki, podsufitki, kokpitu, odkurzanie przestrzeni pasa�
 Brak możliwości płacenia kartą, co jest istotnym utrudnieniem.
 
 Polecam bardzo serdecznie!</p>
-                <footer class="border-t border-gray-200 pt-3">
-                    <p class="font-semibold text-gray-900">Patryk Grądys</p>
-                    <p class="text-sm text-gray-500">5 lat temu</p>
+                <footer>
+                    <div class="review-author">Patryk Grądys</div>
+                    <div class="review-date">5 lat temu</div>
                 </footer>
             </article>
             
-            <article class="review-card bg-slate-50 rounded-2xl shadow-sm p-6 border-l-4 border-amber-400">
-                <div class="flex items-center gap-2 mb-3">
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                        <span class="star text-sm">★</span>
-                    
-                    <span class="font-bold text-gray-800">5.0</span>
+            <article class="review">
+                <div class="review-stars">
+                    ★★★★★
+                    <span class="review-rating">5.0</span>
                 </div>
-                <p class="text-gray-700 mb-4 leading-relaxed">Ja się wypowiem tylko o wulkanizacji, z myjni jeszcze nie korzystałem. Obsługa sprawna (zwrócili uwagę na klejony wcześniej dekielek przy jednej z felg i zamiast zakładać go z powrotem wręczyli do rąk własnych żeby nie zgubić na pierwszym zakręcie) po wymianie, opony spakowane do worków i wrzucone z powrotem do auta - na plus. Jest też coś na minus - brak możliwości płacenia kartą, co w dzisiejszych czasach stanowi rzadkość. 5* na zachętę do założenia terminala, zamiast odsyłania klientów do oddalonego o 200m bankomatu, który przecież kiedyś może okazać się niesprawny. Pozdrawiam</p>
-                <footer class="border-t border-gray-200 pt-3">
-                    <p class="font-semibold text-gray-900">Marek S</p>
-                    <p class="text-sm text-gray-500">5 lat temu</p>
+                <p class="review-text">Ja się wypowiem tylko o wulkanizacji, z myjni jeszcze nie korzystałem. Obsługa sprawna (zwrócili uwagę na klejony wcześniej dekielek przy jednej z felg i zamiast zakładać go z powrotem wręczyli do rąk własnych żeby nie zgubić na pierwszym zakręcie) po wymianie, opony spakowane do worków i wrzucone z powrotem do auta - na plus. Jest też coś na minus - brak możliwości płacenia kartą, co w dzisiejszych czasach stanowi rzadkość. 5* na zachętę do założenia terminala, zamiast odsyłania klientów do oddalonego o 200m bankomatu, który przecież kiedyś może okazać się niesprawny. Pozdrawiam</p>
+                <footer>
+                    <div class="review-author">Marek S</div>
+                    <div class="review-date">5 lat temu</div>
                 </footer>
             </article>
             
@@ -372,173 +444,221 @@ Polecam bardzo serdecznie!</p>
 </section>
 
 
+<!-- GALLERY -->
 
-<section id="gallery" class="py-16 md:py-20 bg-slate-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Galeria zdjęć</h2>
-        <p class="text-gray-600 mb-8">Kliknij zdjęcie, aby powiększyć. Na telefonie możesz przesuwać palcem.</p>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+<section id="gallery" class="section">
+    <div class="section-inner">
+        <div class="section-header">
+            <h2 class="section-title">Galeria zdjęć</h2>
+            <span class="section-meta">8 zdjęć</span>
+        </div>
+        <div class="gallery-grid">
             
-            <button type="button" class="gallery-open relative overflow-hidden rounded-xl shadow-md aspect-square gallery-img" data-index="0" aria-label="Otwórz zdjęcie 1">
-                <img src="images/photo_00.jpg" alt="Zdjęcie Myjnia — 1" class="w-full h-full object-cover" loading="lazy">
+            <button type="button"
+                    class="gallery-item gallery-open featured"
+                    data-index="0"
+                    aria-label="Zdjęcie 1"
+                    style="border:none;padding:0;cursor:pointer">
+                <img src="images/photo_00.jpg" alt="Zdjęcie Myjnia — 1" loading="lazy">
+                
             </button>
             
-            <button type="button" class="gallery-open relative overflow-hidden rounded-xl shadow-md aspect-square gallery-img" data-index="1" aria-label="Otwórz zdjęcie 2">
-                <img src="images/photo_01.jpg" alt="Zdjęcie Myjnia — 2" class="w-full h-full object-cover" loading="lazy">
+            <button type="button"
+                    class="gallery-item gallery-open "
+                    data-index="1"
+                    aria-label="Zdjęcie 2"
+                    style="border:none;padding:0;cursor:pointer">
+                <img src="images/photo_01.jpg" alt="Zdjęcie Myjnia — 2" loading="lazy">
+                
             </button>
             
-            <button type="button" class="gallery-open relative overflow-hidden rounded-xl shadow-md aspect-square gallery-img" data-index="2" aria-label="Otwórz zdjęcie 3">
-                <img src="images/photo_02.jpg" alt="Zdjęcie Myjnia — 3" class="w-full h-full object-cover" loading="lazy">
+            <button type="button"
+                    class="gallery-item gallery-open "
+                    data-index="2"
+                    aria-label="Zdjęcie 3"
+                    style="border:none;padding:0;cursor:pointer">
+                <img src="images/photo_02.jpg" alt="Zdjęcie Myjnia — 3" loading="lazy">
+                
             </button>
             
-            <button type="button" class="gallery-open relative overflow-hidden rounded-xl shadow-md aspect-square gallery-img" data-index="3" aria-label="Otwórz zdjęcie 4">
-                <img src="images/photo_03.jpg" alt="Zdjęcie Myjnia — 4" class="w-full h-full object-cover" loading="lazy">
+            <button type="button"
+                    class="gallery-item gallery-open "
+                    data-index="3"
+                    aria-label="Zdjęcie 4"
+                    style="border:none;padding:0;cursor:pointer">
+                <img src="images/photo_03.jpg" alt="Zdjęcie Myjnia — 4" loading="lazy">
+                
             </button>
             
-            <button type="button" class="gallery-open relative overflow-hidden rounded-xl shadow-md aspect-square gallery-img" data-index="4" aria-label="Otwórz zdjęcie 5">
-                <img src="images/photo_04.jpg" alt="Zdjęcie Myjnia — 5" class="w-full h-full object-cover" loading="lazy">
+            <button type="button"
+                    class="gallery-item gallery-open "
+                    data-index="4"
+                    aria-label="Zdjęcie 5"
+                    style="border:none;padding:0;cursor:pointer">
+                <img src="images/photo_04.jpg" alt="Zdjęcie Myjnia — 5" loading="lazy">
+                
             </button>
             
-            <button type="button" class="gallery-open relative overflow-hidden rounded-xl shadow-md aspect-square gallery-img" data-index="5" aria-label="Otwórz zdjęcie 6">
-                <img src="images/photo_05.jpg" alt="Zdjęcie Myjnia — 6" class="w-full h-full object-cover" loading="lazy">
+            <button type="button"
+                    class="gallery-item gallery-open "
+                    data-index="5"
+                    aria-label="Zdjęcie 6"
+                    style="border:none;padding:0;cursor:pointer">
+                <img src="images/photo_05.jpg" alt="Zdjęcie Myjnia — 6" loading="lazy">
+                
             </button>
             
-            <button type="button" class="gallery-open relative overflow-hidden rounded-xl shadow-md aspect-square gallery-img" data-index="6" aria-label="Otwórz zdjęcie 7">
-                <img src="images/photo_06.jpg" alt="Zdjęcie Myjnia — 7" class="w-full h-full object-cover" loading="lazy">
+            <button type="button"
+                    class="gallery-item gallery-open "
+                    data-index="6"
+                    aria-label="Zdjęcie 7"
+                    style="border:none;padding:0;cursor:pointer">
+                <img src="images/photo_06.jpg" alt="Zdjęcie Myjnia — 7" loading="lazy">
+                
             </button>
             
-            <button type="button" class="gallery-open relative overflow-hidden rounded-xl shadow-md aspect-square gallery-img" data-index="7" aria-label="Otwórz zdjęcie 8">
-                <img src="images/photo_07.jpg" alt="Zdjęcie Myjnia — 8" class="w-full h-full object-cover" loading="lazy">
+            <button type="button"
+                    class="gallery-item gallery-open "
+                    data-index="7"
+                    aria-label="Zdjęcie 8"
+                    style="border:none;padding:0;cursor:pointer">
+                <img src="images/photo_07.jpg" alt="Zdjęcie Myjnia — 8" loading="lazy">
+                
             </button>
             
         </div>
     </div>
 </section>
 
+<!-- LIGHTBOX -->
 <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Galeria zdjęć">
-    <button type="button" class="lightbox-btn lightbox-close" aria-label="Zamknij">×</button>
-    <button type="button" class="lightbox-btn lightbox-prev" aria-label="Poprzednie zdjęcie">‹</button>
+    <button type="button" class="lb-btn lb-close" aria-label="Zamknij">×</button>
+    <button type="button" class="lb-btn lb-prev" aria-label="Poprzednie">‹</button>
     <img id="lightbox-img" src="" alt="">
-    <button type="button" class="lightbox-btn lightbox-next" aria-label="Następne zdjęcie">›</button>
-    <div class="lightbox-counter" id="lightbox-counter"></div>
+    <button type="button" class="lb-btn lb-next" aria-label="Następne">›</button>
+    <div class="lb-counter" id="lb-counter"></div>
 </div>
 
 
+<!-- MAP -->
 
-<section id="map" class="py-16 md:py-20 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10">Lokalizacja</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            <div class="lg:col-span-3 rounded-2xl overflow-hidden shadow-lg border border-slate-200">
-                <div id="map-container"></div>
-            </div>
-            <div class="lg:col-span-2 space-y-4">
-                <div class="bg-slate-50 rounded-2xl p-6 md:p-8 border border-slate-100 h-full">
-                    <h3 class="text-xl font-bold text-gray-900 mb-4">Jak dojechać</h3>
-                    <p class="text-gray-700 mb-4">Mazurska 20, 93-305 Łódź, Polska</p>
+<section id="map" class="section">
+    <div class="section-inner">
+        <h2 class="section-title" style="margin-bottom:1.5rem">Lokalizacja</h2>
+        <div class="map-grid">
+            <div id="map-container"></div>
+            <div class="map-sidebar">
+                <div class="map-addr">
+                    <div class="map-addr-label">Adres</div>
+                    Mazurska 20, 93-305 Łódź, Polska
                     
-                    <p class="text-sm text-gray-500 mb-4">Kod Plus: <span class="text-gray-800 font-medium">PFHH+WX Łódź, Polska</span></p>
+                    <div style="margin-top:8px;font-size:11px;color:var(--fg-3)">Kod Plus: PFHH+WX Łódź, Polska</div>
                     
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        
-                        <a href="https://maps.google.com/?cid=9279461724964387464" target="_blank" rel="noopener noreferrer" class="inline-flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-xl transition">
-                            Otwórz w Google Maps
-                        </a>
-                        
-                        <a href="https://www.google.com/maps/dir/?api=1&destination=51.72983,19.4799306" target="_blank" rel="noopener noreferrer" class="inline-flex justify-center items-center border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-5 rounded-xl transition">
-                            Nawiguj
-                        </a>
-                    </div>
                 </div>
+                
+                <a href="https://maps.google.com/?cid=9279461724964387464" target="_blank" rel="noopener noreferrer" class="btn btn-dark" style="justify-content:center">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                    Otwórz w Google Maps
+                </a>
+                
+                <a href="https://www.google.com/maps/dir/?api=1&destination=51.72983,19.4799306" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="justify-content:center">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Nawiguj
+                </a>
             </div>
         </div>
     </div>
 </section>
 
 
-<section class="py-16 bg-gradient-to-r from-blue-600 to-blue-700">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Chcesz nas odwiedzić?</h2>
-        <p class="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">Sprawdź trasę dojazdu i odwiedź nas w wybranym terminie.</p>
-        <a href="https://maps.google.com/?cid=9279461724964387464" target="_blank" rel="noopener noreferrer" class="cta-button inline-block bg-white hover:bg-gray-100 text-blue-600 font-bold py-4 px-8 rounded-xl shadow-lg">
+<!-- CTA -->
+<section class="cta">
+    <div class="cta-inner">
+        <div>
+            <h2>Chcesz nas odwiedzić?</h2>
+            <p>Sprawdź trasę dojazdu i odwiedź nas w wybranym terminie.</p>
+        </div>
+        <a href="https://maps.google.com/?cid=9279461724964387464"
+           target="_blank" rel="noopener noreferrer"
+           class="btn btn-dark" style="flex-shrink:0;white-space:nowrap">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             Wyznacz trasę
         </a>
     </div>
 </section>
 
-<footer class="bg-gray-900 text-gray-400 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>© Myjnia. Wszystkie prawa zastrzeżone.</p>
-            
-            <a href="https://maps.google.com/?cid=9279461724964387464" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300">Zobacz w Google Maps →</a>
-            
-        </div>
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-inner">
+        <span class="footer-copy">© Myjnia. Wszystkie prawa zastrzeżone.</span>
+        
+        <a href="https://maps.google.com/?cid=9279461724964387464" target="_blank" rel="noopener noreferrer" class="footer-link">Zobacz w Google Maps →</a>
+        
     </div>
 </footer>
 
+<!-- LIGHTBOX JS -->
 
 <script>
-(function() {
+(function () {
     const photos = ["images/photo_00.jpg", "images/photo_01.jpg", "images/photo_02.jpg", "images/photo_03.jpg", "images/photo_04.jpg", "images/photo_05.jpg", "images/photo_06.jpg", "images/photo_07.jpg"];
-    const lightbox = document.getElementById('lightbox');
+    const lb = document.getElementById('lightbox');
     const img = document.getElementById('lightbox-img');
-    const counter = document.getElementById('lightbox-counter');
+    const counter = document.getElementById('lb-counter');
     let current = 0;
     let touchStartX = 0;
 
-    function show(index) {
-        current = (index + photos.length) % photos.length;
+    function show(i) {
+        current = (i + photos.length) % photos.length;
         img.src = photos[current];
+        img.alt = 'Zdjęcie ' + (current + 1);
         counter.textContent = (current + 1) + ' / ' + photos.length;
-        lightbox.classList.add('active');
+        lb.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
     function close() {
-        lightbox.classList.remove('active');
+        lb.classList.remove('active');
         document.body.style.overflow = '';
     }
-
-    function next() { show(current + 1); }
-    function prev() { show(current - 1); }
 
     document.querySelectorAll('.gallery-open').forEach(btn => {
         btn.addEventListener('click', () => show(parseInt(btn.dataset.index, 10)));
     });
 
-    lightbox.querySelector('.lightbox-close').addEventListener('click', close);
-    lightbox.querySelector('.lightbox-prev').addEventListener('click', prev);
-    lightbox.querySelector('.lightbox-next').addEventListener('click', next);
+    lb.querySelector('.lb-close').addEventListener('click', close);
+    lb.querySelector('.lb-prev').addEventListener('click', () => show(current - 1));
+    lb.querySelector('.lb-next').addEventListener('click', () => show(current + 1));
+    lb.addEventListener('click', e => { if (e.target === lb) close(); });
 
-    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
-    document.addEventListener('keydown', (e) => {
-        if (!lightbox.classList.contains('active')) return;
+    document.addEventListener('keydown', e => {
+        if (!lb.classList.contains('active')) return;
         if (e.key === 'Escape') close();
-        if (e.key === 'ArrowRight') next();
-        if (e.key === 'ArrowLeft') prev();
+        if (e.key === 'ArrowRight') show(current + 1);
+        if (e.key === 'ArrowLeft') show(current - 1);
     });
 
-    lightbox.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-    lightbox.addEventListener('touchend', (e) => {
+    lb.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    lb.addEventListener('touchend', e => {
         const diff = e.changedTouches[0].screenX - touchStartX;
-        if (Math.abs(diff) > 50) { diff < 0 ? next() : prev(); }
+        if (Math.abs(diff) > 50) show(current + (diff < 0 ? 1 : -1));
     }, { passive: true });
 })();
 </script>
 
 
+<!-- LEAFLET -->
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-(function() {
+(function () {
     const lat = 51.72983;
     const lng = 19.4799306;
     const name = "Myjnia";
     const map = L.map('map-container', { scrollWheelZoom: false }).setView([lat, lng], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
     L.marker([lat, lng]).addTo(map).bindPopup('<strong>' + name + '</strong>').openPopup();
     setTimeout(() => map.invalidateSize(), 200);
