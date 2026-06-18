@@ -1,0 +1,21 @@
+{
+  "place_id": "ChIJgwv8cZA0GkcRiPpVL0ZFx4A",
+  "name": "Myjnia",
+  "address": "Mazurska 20, 93-305 \u0141\u00f3d\u017a, Polska",
+  "rating": 4.5,
+  "review_count": 360,
+  "categories": [
+    "car_repair",
+    "car_wash",
+    "establishment",
+    "point_of_interest",
+    "store"
+  ],
+  "price_level": null,
+  "coordinates": {
+    "lat": 51.72983,
+    "lng": 19.4799306
+  },
+  "maps_url": "https://maps.google.com/?cid=9279461724964387464",
+  "timestamp": "2026-06-18T21:22:40.411167"
+}
